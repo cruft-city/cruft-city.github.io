@@ -1,0 +1,20 @@
+I"ê<p>A few years ago I got to do a workshop with some designers from New Balance. It was very cool to learn how they approach the design of footwear. I used Houdini and took a procedural approach to the designs.</p>
+
+<p><img src="/images/NB_wrkshp/voronoi_shoe_N_3.jpg" alt="_config.yml" /></p>
+
+<p>New Balance provided us with two data sets. One of them contained the strain values in a shoe upper corresponding to fast direction changes while running. The other was the strain developed in the sole of a shoe during running. I visualized the two datasets in the following picture.</p>
+
+<p><img src="/images/NB_wrkshp/aramis_upper.jpg" alt="_config.yml" /></p>
+
+<p>They were kind enought to print the shoe for me:</p>
+
+<p><img src="/images/NB_wrkshp/the_boot_print.jpg" alt="_config.yml" /></p>
+
+<p>Along the way, I also tried a few other designs and came across some fun images during the process:</p>
+
+<p><img src="/images/NB_wrkshp/voronoi_shoe_gradient_N_2.jpg" alt="_config.yml" />
+<img src="/images/NB_wrkshp/voronoi_1_top.png" alt="_config.yml" />
+<img src="/images/NB_wrkshp/lattice_1_side.png" alt="_config.yml" />
+<img src="/images/NB_wrkshp/rd_droplets_1.jpg" alt="_config.yml" />
+<img src="/images/NB_wrkshp/rd_final.jpg" alt="_config.yml" /></p>
+:ET
