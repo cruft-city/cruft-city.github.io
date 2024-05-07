@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Reinforcement learning in rocket league – Cruft City Express – ⚙ ⚙ ⚙</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="Using PPO.
+" />
+    <meta property="og:description" content="Using PPO.
+" />
+    
+    <meta name="author" content="Cruft City Express" />
+
+    
+    <meta property="og:title" content="Reinforcement learning in rocket league" />
+    <meta property="twitter:title" content="Reinforcement learning in rocket league" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cruft City Express - ⚙ ⚙ ⚙" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/eye.png" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cruft City Express</a></h1>
+            <p class="site-description">⚙ ⚙ ⚙</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <!-- <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> -->
+<head>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+    
+<script type="text/javascript"
+        src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+</head>    
+
+<article class="post">
+  <h1>Reinforcement learning in rocket league</h1>
+
+  <div class="entry">
+    <p>Using PPO.</p>
+
+<p>These models take WAY longer than I expected to train.</p>
+
+<p>Rocket league is hard for reinforcement learning for a few reasons (there are probably others as well):</p>
+<ul>
+  <li>the rewards in the “true game” are sparse in both time and space
+    <ul>
+      <li>the agent can play for a long time without producing any reward</li>
+    </ul>
+  </li>
+  <li>the game is a full 3D physics simulation, nuanced rules to learn.
+    <ul>
+      <li>hitting the ball with different parts of the car produces different results</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Rocket league is a cool testbed for reinforcement learning because:
+    - there are obvious “behaviors” which delinneate skill levels (aerial shots, dribbling) but the game can be played without these,
+    - team play can be very complex with teams playing positions (goalie, striker, etc), or rotating constantly. Passing both on the ground and in the air is also common among human players.</p>
+
+<p>Notes from implementation:
+    - Tuning hyperparameters is the name of the game.
+        - Values are not normalized, so must figure out the scaling for this particular application. What value for entropy is too high?
+        - My kl_divergence (entropy?) seemed to be too low (1e-7) and stabilizing too fast (mostly constant), therefore no learning was taking place. Playing 3v3 raised value and increased the variance, so did increasing the learning rate. The hypothesis is that this helps with learning. I also increased the value associated with the different rewards, because in PPO, things aren’t normalized, increasing or decreasing the reward by a constant can change the result. This is frustrating, and makes tuning more complex. I imagine that 3v3 helps solve the sparse reward problem. More cars means more action.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>- To address the sparse rewards:
+    - I changed the initial state of the game to have the ball roll towards either goal (randomly). This way it is more likely that a goal will be scored or that the ball will bounce off an agent. The idea is that agents may learn that bumping the ball produces reward, or that the ball rolling into the goal provides reward (even if they did not seek out the ball or shoot it).
+
+- Reward shaping/curriculum
+    - for the first 27 million iterations, I had the reward for playervelocitytoball high and balltouch high and velocityballtogoal high (all rewards were scaled by 1). What I was really after was having the algorithm generate rewards through getting shots and goals and saves (like a human rocket league player). These first rewards were kind of like surrogates, they were continuous stand ins to help the algorithm get started with the game. It worked, the agent learned a behavior where all six cars chased the ball all at once, trying to stay as close as possible to it. Almost all of the training runs ended with a goal (rather than a timeout after nobody hit the ball for 30 seconds which was commonplace before). Also at this point we are starting to see saves and assists because more cars are hitting the ball during each iteration of the game. I was also seeing a lot of own goals here because hitting the ball was so highly rewarded that it made the penalty of the own goal less severe, incentivizing the player to hit the ball into their own goal (especially if it was already going towards the goal). Getting to this point took about 48 hours of training time on my computer (real time).
+    After 27 million iterations, I decreased the reward for playervelocitytoball and balltouch by a factor of two, and increased velocityballtogoal by a factor of two and eventreward by a factor of 3.
+    he hope was that, now that the algorithm knew how to chase the ball and generate its own reward from relatively complex gameplay, it didnt need the surrogates which were biasing the behavior towards bad teamwork. Hopefully now, players will learn to do more advanced team play where not everyone is chasing at once (although I have seen some human teams play like this, despite it not working very well). This is already a pretty big success! I also increased the reward associated with hitting the ball in the air. The idea was that this would help bias the agent towards learning some aerial skills, although these are challenging. Rocket league also keeps track of aerial goals, so maybe that's something I can expose later. Also would be cool to incentivize other funny things like backwards goals and turtle goals to try to teach the agent to be more flashy.
+
+    More training with the reward function resulted in the agent scoring much more of the goals which happened in the game. Because I initialize the ball with some random velocity, goals had often been scored by the random initialization without any interaction with the agent. Now, a large number of the 700 or so goals in the current run were attributed to the agents (84% of the goals), meaning that they had touched the ball before it went in. This is wonderful. Additionally, 23% (almost a quarter!) of the goals scored by agents at this point had been off assists from teammates. This means that a teammate had touched the ball recently as of the scoring of the goal. This is great because it implies that the agents are "working together" to score goals. It doesn't mean that there is any kind of complex strategy at play, but it does mean that the agents are hitting the ball now, and are able to hit it to places where their teammates can score, which is a step in the right direction.
+    Unfortunately, despite being highly rewarded (half the reward of a goal), we are not seeing 14 saves (compared to 700 goals) by all 6 agents combined. This is something I would like to improve and may just require more training or some kind of more advanced curriculum. Only time will tell!
+
+    I then increased the reward associated with a save to be equal to that of a goal, therefore incentivizing a behavior which was not previously displayed. This may also be important for developing further team play (in addition to the need for assists).
+
+    Increasing the save reward hasn't seemed to have a large effect. I think that saves are so infrequent that its going to take a long time to take effect. I added a term that rewards ball speed (in any direction, in addition to the existing ballspeedtogoal reward), the idea here is to increase the speed of play (which seemed pretty slow, good players play FAST). I also added a term which rewarded ball height to try to get the agents to taking the ball up the sides of the arena and perhaps even do some aerials. I also made it run 6 instances of rocket league.
+
+    I was adjusting the cost function and experimenting with running more instances which lead to a forgetting event (FORGETTING IMAGE). I kept changing the number of instances and the weights of the different terms in the reward function, but it didnt help. So I rewound back to the night before and continued with that model instead. I would really like to run multiple instances because it should significantly increase the rate of training. Eventually I found out where I'd goofed. In my effort to reward the agent based on the speed of the ball (to speed up the way the agent played), I had replaced the velocityballtogoal reward with a velocityball reward, thereby removing the explicit incentive to push the ball towards the goal, hence the forgetting. This was a good lesson because I had imagined that the agent had figured out how to score (it was scoring the majority of the goals, eg not many own goals), so it may not need the continuous velocityballtogoal reward because it would receive reward from scoring. But it turns out that this reward was too sparse to maintain this behavior on its own. This could also be why we don't see very many saves from the agent, because we dont have any continuous incentive for the behavior which precedes a save and the reward for the save procedure is very sparse.
+
+    I fixed this issue, now the agent is being rewarded for both ball speed and velocityballtogoal and it seems to be learning again, even with multiple instances. This is wonderful. It was not learning again... My current hypothesis is that the neural network was not large enough to handle the complex behavior I wanted to see.
+
+    Currently, rlgym does not allow for rewarding assists and centering of the ball, which is something I would like to add (because I think it may help incentivize team play). Although currently a "team goal" does provide some points for all agents on the team, I do think the assist and the centered ball are important behaviors to reward specifically.
+    I would also like to add a reward for the ball's height in the air to bias the agent towards more aerial play (also going up the wall). Maybe it would be interesting to see add a reward for agent z height to bias it towards jumping and going up the walls. I'd definitely need to keep this small though to prevent random agents driving on the roof and not playing.
+</code></pre></div></div>
+
+<h2 id="tutor-network">Tutor network</h2>
+<p>Curricula are important for teaching reinforcement learning algorithms. In some situations, the right move is to just buy all of AWS for a few weeks and train your algorithm. It’s cool to say that your algorithm learned how to play some complex game from scratch. Maybe it found some unique strategy because it was figuring everything out all on its own without the intereference of a human. This is how OpenAI does it. I don’t have the money for that, so instead, let’s try to make the training more efficient by starting the algorithm out on simpler tasks which together will result in a pretty good player which is then ready to learn on the full game problem. This feels pretty natural, it’s how humans learn after all. We learn by doing drills and tutorials, learning to deal with simple problems before we try to play the complete game. This is called a curriculum</p>
+
+<p>The question now is how to design the curriculum? How do we know the best way to teach this neural network? One way to do it is to use our domain expertise to design some simple tasks which together we think would add up to good playing. For example, these could be a shot blocking tutorial and a goal scoring tutorial. Rocket League actually has a few of these built in and they are quite popular among players. TRY THIS!</p>
+
+<p>These tutorials are popular among players, but the reinforcement learning algorithm is not a human. When you see the ball flying through the air, you have a pretty good idea of where it will go next. The game was designed so that the physics of the ball and the cars intuitively makes sense. But the reinforcement learning model does not come with any preconceptions about real life or the game, all it sees are numbers corresponding to the positions of the cars and the ball. But, it doesn’t know what these numbers <em>mean</em>, it has to figure that out. It doesn’t know anything about physics or how to predict what should happen when a certain input is made, it has to figure this out as well. The agent is starting completely from scratch.</p>
+
+<p>So, the RL agent is not a person, we have no idea what it might be like to start from absolutely zero knowledge. How can we be a good teacher is we cannot understand? Perhaps we can train another neural network to teach our agent. This new network, call it the tutor network. The tutor will generate starting conditions for the RL agent and it will be evaluated based on how much improvement the RL agent sees in its next game. This way, the tutor can figure out how to best teach the RL agent by generating drills.</p>
+
+<p>The tutor will output:
+    initial position and velocity of the ball
+    initial position and velocity of all the cars
+the tutor will take as input:
+    ???
+    the action sequence of the agent in the last run?
+    the reward of the agent in the last run(s)?
+the tutor loss will be:
+    the reward post-drills - the reward pre-drills
+    this may be super noisy…</p>
+
+<h3 id="getting-a-recurrent-network-to-play-rocket-league">Getting a recurrent network to play rocket League</h3>
+<p>I tried it a couple of times and it didnt work, times to get organized.</p>
+
+<p>The first step was to get a regular network to play rocket league to validate the approach. I also simplified the reward function to just reward closeness to the ball and ball touches.
+I tried to use a relatively small network in order to keep training time low, it still took a painfully long time, but eventually worked.</p>
+
+<p>Next, I wanted to see if some small changes would lead to a significant speedup in training. I would change the starting state of the game to be the ball moving in a random direction. With the old starting state, the ball only moved when the cars hit it, which took a very long time to happen with the cars performing random actions. With the new starting state, the ball would move more, which simulates a game better, and it would hit the cars more often, even if they weren’t moving with purpose. This should mean that more of the training data is useful for exploring the reward space. The other optimization I would try is to stop rollouts where nobody has hit the ball for 30 seconds. This is because the new initial state should lead to cars hitting the ball often as well as ball movement. If more than 30 seconds passes without a ball hit, very little useful training data is actually being generated, so resetting the environment with the ball moving in a random direction would be a good thing to do. I will test if these two optimizations together speed up training.</p>
+
+  </div>
+
+  <div class="date">
+    Written on April 11, 2022
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

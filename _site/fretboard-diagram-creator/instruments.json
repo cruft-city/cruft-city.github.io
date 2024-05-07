@@ -1,0 +1,65 @@
+[
+    {  
+        "name":             "guitar - standard",   
+        "stringIntervals":  [24, 19, 15, 10, 5, 0],
+        "lowNote":          "E",
+        "fretted":          true,
+        "markers":  [3, 5, 7, 9, 12, 15, 17, 19, 21, 23]
+    },
+    {  
+        "name":             "guitar - DADGAD",   
+        "stringIntervals":  [24, 19, 17, 12, 7, 0],
+        "lowNote":          "D",
+        "fretted":          true,
+        "markers":  [3, 5, 7, 9, 12, 15, 17, 19, 21, 23]
+    },
+    {  
+        "name":             "guitar - fourths",   
+        "stringIntervals":  [25, 20, 15, 10, 5, 0],
+        "lowNote":          "E",
+        "fretted":          true,
+        "markers":  [3, 5, 7, 9, 12, 15, 17, 19, 21, 23]
+    },
+    {  
+        "name":             "lap steel - C6",   
+        "stringIntervals":  [16, 12, 9, 7, 4, 0],
+        "lowNote":          "C",
+        "fretted":          true,
+        "markers":  [3, 5, 7, 9, 12, 15, 17, 19, 21, 23]
+    },
+    {  
+        "name":             "bass - standard",   
+        "stringIntervals":  [15, 10, 5, 0],
+        "lowNote":          "E",
+        "fretted":          true,
+        "markers":  [3, 5, 7, 9, 12, 15, 17, 19, 21, 23]
+    },
+    {  
+        "name":             "violin - standard",   
+        "stringIntervals":  [21, 14, 7, 0],
+        "lowNote":          "G",
+        "fretted":          false,
+        "markers":  [2, 4, 5, 7]
+    }, 
+    {  
+        "name":             "violin (5 string) - standard",   
+        "stringIntervals":  [28, 21, 14, 7, 0],
+        "lowNote":          "C",
+        "fretted":          false,
+        "markers":  [2, 4, 5, 7]
+    }, 
+    {  
+        "name":             "viola - standard",   
+        "stringIntervals":  [21, 14, 7, 0],
+        "lowNote":          "C"  ,
+        "fretted":          false,
+        "markers":  [2, 4, 5, 7]
+    }, 
+    {  
+        "name":             "viola (5 string) - standard",   
+        "stringIntervals":  [28, 21, 14, 7, 0],
+        "lowNote":          "F"  ,
+        "fretted":          false,
+        "markers":  [2, 4, 5, 7]
+    }
+]
